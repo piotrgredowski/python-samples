@@ -506,3 +506,16 @@ footer.deck-footer {
   text-transform: lowercase;
   opacity: 0.96;
 }
+
+.reveal .video-embed {
+  margin-top: 0.5rem;
+}
+
+.reveal .video-embed iframe {
+  width: min(960px, 100%);
+  aspect-ratio: 16 / 9;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #000;
+}

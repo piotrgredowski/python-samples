@@ -10,9 +10,10 @@ let constellations = [];
 let planets = [];
 let shootingStars = [];
 let nextShootingStarAt = 0;
+let lastFrameTimeMs = null;
 
 function scheduleNextShootingStar(time) {
-  nextShootingStarAt = time + (5000 + Math.random() * 10000);
+  nextShootingStarAt = time + (2000 + Math.random() * 5000);
 }
 
 function resizeCanvas(width, height) {
@@ -114,6 +115,11 @@ function drawBackground(time = 0) {
   const width = window.innerWidth;
   const height = window.innerHeight;
   const seconds = time * 0.001;
+  const dt = Math.min(
+    0.05,
+    lastFrameTimeMs === null ? 1 / 60 : (time - lastFrameTimeMs) / 1000,
+  );
+  lastFrameTimeMs = time;
 
   if (width !== lastWidth || height !== lastHeight) {
     resizeCanvas(width, height);
@@ -131,12 +137,18 @@ function drawBackground(time = 0) {
     const length = 45 + Math.random() * 45;
     const direction = Math.random() > 0.5 ? 1 : -1;
     const angle = direction * (Math.PI * (0.14 + Math.random() * 0.12));
-    const speed = 320 + Math.random() * 160;
+    const speed = 280 + Math.random() * 260;
+    const ux = Math.cos(angle);
+    const uy = Math.sin(angle);
     shootingStars.push({
       x: startX,
       y: startY,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed,
+      ux,
+      uy,
+      speed,
+      speedVariance: 0.2 + Math.random() * 0.35,
+      speedPhase: Math.random() * Math.PI * 2,
+      distance: 0,
       length,
       life: 0,
       duration: 0.55 + Math.random() * 0.35,
@@ -249,34 +261,36 @@ function drawBackground(time = 0) {
 
   bgCtx.save();
   shootingStars = shootingStars.filter((star) => {
-    star.life += 1 / 60;
+    star.life += dt;
     if (star.life > star.duration) {
       return false;
     }
 
     const progress = star.life / star.duration;
-    const headX = star.x + star.vx * star.life;
-    const headY = star.y + star.vy * star.life;
-    const tailX =
-      headX - (star.vx / Math.hypot(star.vx, star.vy)) * star.length;
-    const tailY =
-      headY - (star.vy / Math.hypot(star.vx, star.vy)) * star.length;
-    const alpha = Math.sin(progress * Math.PI) * 0.42;
+    const speedWave = Math.sin(progress * Math.PI * 1.4 + star.speedPhase);
+    const speedFactor = Math.max(0.45, 0.85 + speedWave * star.speedVariance);
+    star.distance += star.speed * speedFactor * dt;
+
+    const headX = star.x + star.ux * star.distance;
+    const headY = star.y + star.uy * star.distance;
+    const tailX = headX - star.ux * star.length;
+    const tailY = headY - star.uy * star.length;
+    const alpha = Math.sin(progress * Math.PI) * 0.78;
 
     const trail = bgCtx.createLinearGradient(headX, headY, tailX, tailY);
-    trail.addColorStop(0, `rgba(255, 255, 255, ${alpha * 0.32})`);
-    trail.addColorStop(0.4, `rgba(255, 255, 255, ${alpha * 0.12})`);
+    trail.addColorStop(0, `rgba(255, 255, 255, ${alpha * 0.75})`);
+    trail.addColorStop(0.4, `rgba(255, 255, 255, ${alpha * 0.28})`);
     trail.addColorStop(1, "rgba(255, 255, 255, 0)");
 
     bgCtx.strokeStyle = trail;
-    bgCtx.lineWidth = 1;
+    bgCtx.lineWidth = 1.4;
     bgCtx.beginPath();
     bgCtx.moveTo(headX, headY);
     bgCtx.lineTo(tailX, tailY);
     bgCtx.stroke();
 
-    bgCtx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.4})`;
-    bgCtx.fillRect(headX, headY, 1, 1);
+    bgCtx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.9})`;
+    bgCtx.fillRect(headX - 0.5, headY - 0.5, 2, 2);
     return true;
   });
   bgCtx.restore();
@@ -291,6 +305,7 @@ animationFrameId = window.requestAnimationFrame(drawBackground);
 window.addEventListener("resize", () => {
   lastWidth = 0;
   lastHeight = 0;
+  lastFrameTimeMs = null;
   if (animationFrameId === null) {
     animationFrameId = window.requestAnimationFrame(drawBackground);
   }
