@@ -1,0 +1,11 @@
+{
+  "name": "local-coding-with-llm-presentation",
+  "private": true,
+  "scripts": {
+    "start": "vite --host 127.0.0.1 --port 8080",
+    "dev": "vite --host 127.0.0.1 --port 8080"
+  },
+  "devDependencies": {
+    "vite": "^7.0.7"
+  }
+}
