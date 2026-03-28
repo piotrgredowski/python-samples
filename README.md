@@ -55,3 +55,14 @@ uv run pytest --doctest-modules src
 
 - presentations:
   - [Renaming on steroids with AI code assistants](.presentations/08072024_renaming_on_steroids)
+  - [Local coding with LLMs](.presentations/local-coding-with-llm)
+
+## GitHub Pages
+
+This repository deploys `.presentations/local-coding-with-llm` to GitHub Pages
+using `.github/workflows/gh-pages.yml`.
+
+After enabling **Settings → Pages → Build and deployment → GitHub Actions**,
+the presentation will be available at:
+
+`https://<your-github-username>.github.io/<your-repository-name>/`
